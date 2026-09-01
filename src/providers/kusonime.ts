@@ -1,4 +1,4 @@
-import * as cheerio from 'cheerio';
+import * as cheerio from 'npm:cheerio@1.0.0-rc.12';
 import { safeFetch } from '../services/httpClient.ts';
 import type { SearchResult, EpisodeItem, EpisodeStreams, StreamSource, DownloadSource } from '../types.ts';
 
