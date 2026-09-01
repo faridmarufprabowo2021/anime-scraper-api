@@ -92,8 +92,8 @@ export class KusonimeAdapter implements AnimeProviderAdapter {
           currentDlLinks.push({ host: hostName, url: rawUrl });
 
           // 1. Google Drive preview for EXACT resolution (Top Priority)
-          if (rawUrl.includes('drive.google.com/uc?export=download&id=')) {
-            const fileId = rawUrl.match(/id=([a-zA-Z0-9_\-]+)/)?.[1];
+          if (rawUrl.includes('drive.google.com')) {
+            const fileId = rawUrl.match(/[?&]id=([a-zA-Z0-9_\-]+)/)?.[1] || rawUrl.match(/\/d\/([a-zA-Z0-9_\-]+)/)?.[1];
             if (fileId) {
               const embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
               streamSources.push({
@@ -115,6 +115,19 @@ export class KusonimeAdapter implements AnimeProviderAdapter {
               quality: exactQuality,
               qualityRank: qRank,
               provider: `AceFile (${exactQuality})`,
+              url: embedUrl,
+              isIframe: true,
+            });
+          }
+
+          // 3. Mega embed
+          if (rawUrl.includes('mega.nz/file/')) {
+            const embedUrl = rawUrl.replace('mega.nz/file/', 'mega.nz/embed/');
+            streamSources.push({
+              server: `Mega ${exactQuality.toUpperCase()}`,
+              quality: exactQuality,
+              qualityRank: qRank,
+              provider: `Mega (${exactQuality})`,
               url: embedUrl,
               isIframe: true,
             });
