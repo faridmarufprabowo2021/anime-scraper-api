@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
-import { safeFetch } from '../services/httpClient.js';
-import type { SearchResult, EpisodeItem, EpisodeStreams, StreamSource, DownloadSource } from '../types.js';
+import { safeFetch } from '../services/httpClient.ts';
+import type { SearchResult, EpisodeItem, EpisodeStreams, StreamSource, DownloadSource } from '../types.ts';
 
 const HOST = 'https://otakudesu.blog';
 
@@ -94,7 +94,10 @@ export async function getOtakudesuStreams(epSlug: string): Promise<EpisodeStream
       const dataContent = a.attr('data-content');
       if (dataContent) {
         try {
-          const decoded = Buffer.from(dataContent, 'base64').toString('utf-8');
+          // Decode base64 in browser/deno/node compatible way
+          const decoded = typeof atob === 'function' 
+            ? atob(dataContent) 
+            : Buffer.from(dataContent, 'base64').toString('utf-8');
           const iMatch = decoded.match(/src="([^"]+)"/);
           if (iMatch && iMatch[1]) {
             let rank = 2;

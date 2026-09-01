@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
-import { safeFetch } from '../services/httpClient.js';
-import type { SearchResult, EpisodeItem, EpisodeStreams, StreamSource, DownloadSource } from '../types.js';
+import { safeFetch } from '../services/httpClient.ts';
+import type { SearchResult, EpisodeItem, EpisodeStreams, StreamSource, DownloadSource } from '../types.ts';
 
 const HOST = 'https://kusonime.com';
 
