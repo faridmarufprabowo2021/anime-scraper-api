@@ -5,6 +5,7 @@
     "strict": false
   },
   "imports": {
-    "cheerio": "npm:cheerio@1.0.0-rc.12"
+    "cheerio": "npm:cheerio@1.0.0-rc.12",
+    "@consumet/extensions": "npm:@consumet/extensions@1.5.3"
   }
 }
