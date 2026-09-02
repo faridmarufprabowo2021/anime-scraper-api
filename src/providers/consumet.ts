@@ -1,4 +1,4 @@
-import { ANIME } from '@consumet/extensions';
+import { ANIME } from 'npm:@consumet/extensions@1.5.3';
 
 const unity = new ANIME.AnimeUnity();
 
