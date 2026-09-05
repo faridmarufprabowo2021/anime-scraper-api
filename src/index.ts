@@ -4,8 +4,10 @@ import { searchOtakudesu, getOtakudesuEpisodes, getOtakudesuStreams } from './pr
 import { searchKusonime, getKusonimeStreams } from './providers/kusonime.js';
 import { searchWinbu, getWinbuEpisodes, getWinbuStreams } from './providers/winbu.js';
 import { searchSamehadaku, getSamehadakuEpisodes, getSamehadakuStreams } from './providers/samehadaku.js';
+import { enrichEpisodeStreams, autoExtractStream } from './services/streamExtractor.js';
 
 const app = express();
+
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
@@ -85,11 +87,34 @@ app.get('/api/streams', async (req, res) => {
     } else if (provider === 'samehadaku') {
       data = await getSamehadakuStreams(slug);
     }
+
+    // Automatically enrich and unpack all streams into direct HLS & direct MP4
+    data = await enrichEpisodeStreams(data);
+
     res.json({ provider, slug, data });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
+
+// 5. Universal Direct Stream Extractor (Vidhide, Streamwish, Filedon, Pixeldrain)
+app.get('/api/extract', async (req, res) => {
+  const targetUrl = String(req.query.url || '').trim();
+  const serverName = String(req.query.server || '').trim();
+  if (!targetUrl) return res.status(400).json({ error: 'url query parameter is required' });
+
+  try {
+    const result = await autoExtractStream(targetUrl, serverName);
+    res.json({
+      success: Boolean(result),
+      url: targetUrl,
+      extracted: result,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Anime Scraper API is running on port ${PORT}`);

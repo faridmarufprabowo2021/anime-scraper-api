@@ -3,6 +3,8 @@ import { searchKusonime, getKusonimeStreams } from './src/providers/kusonime.ts'
 import { searchWinbu, getWinbuEpisodes, getWinbuStreams } from './src/providers/winbu.ts';
 import { searchSamehadaku, getSamehadakuEpisodes, getSamehadakuStreams } from './src/providers/samehadaku.ts';
 import { searchConsumet, getConsumetEpisodes, getConsumetStreams } from './src/providers/consumet.ts';
+import { enrichEpisodeStreams, autoExtractStream } from './src/services/streamExtractor.ts';
+
 
 Deno.serve(async (req) => {
   const url = new URL(req.url);
@@ -104,11 +106,43 @@ Deno.serve(async (req) => {
     else if (provider === 'otakudesu') data = await getOtakudesuStreams(slug);
     else if (provider === 'kusonime') data = await getKusonimeStreams(slug);
 
+    data = await enrichEpisodeStreams(data);
+
     return new Response(JSON.stringify({ provider, slug, data }), {
       status: 200,
       headers: corsHeaders,
     });
   }
+
+  // 5. Universal Direct Stream Extractor (Vidhide, Streamwish, Filedon, Pixeldrain)
+  if (path === '/api/extract') {
+    const targetUrl = url.searchParams.get('url') || '';
+    const serverName = url.searchParams.get('server') || '';
+    if (!targetUrl) {
+      return new Response(JSON.stringify({ error: 'url parameter is required' }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    try {
+      const result = await autoExtractStream(targetUrl, serverName);
+      return new Response(
+        JSON.stringify({
+          success: Boolean(result),
+          url: targetUrl,
+          extracted: result,
+        }),
+        { status: 200, headers: corsHeaders }
+      );
+    } catch (err: any) {
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 500,
+        headers: corsHeaders,
+      });
+    }
+  }
+
 
   // 5. Debug Samehadaku
   if (path === '/api/debug-samehadaku') {

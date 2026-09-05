@@ -38,3 +38,15 @@ export interface EpisodeStreams {
   streamSources: StreamSource[];
   downloadSources?: DownloadSource[];
 }
+
+export type ProviderSearchResult = SearchResult;
+export type ProviderEpisodeItem = EpisodeItem;
+export type ProviderStreamSource = StreamSource;
+export type ProviderEpisodeStreamData = EpisodeStreams;
+
+export interface AnimeProviderAdapter {
+  name: string;
+  search(query: string): Promise<SearchResult[]>;
+  getEpisodes(animeSlug: string): Promise<EpisodeItem[]>;
+  getEpisodeStreams(episodeSlug: string): Promise<EpisodeStreams>;
+}
