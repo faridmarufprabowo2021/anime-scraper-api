@@ -110,7 +110,35 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 5. Debug Consumet
+  // 5. Debug Samehadaku
+  if (path === '/api/debug-samehadaku') {
+    const q = url.searchParams.get('q') || 'Naruto';
+    try {
+      const targetUrl = `https://www.sankavollerei.web.id/anime/samehadaku/search?q=${encodeURIComponent(q)}`;
+      const res = await fetch(targetUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'application/json',
+        },
+      });
+      const text = await res.text();
+      return new Response(
+        JSON.stringify({
+          status: res.status,
+          headers: Object.fromEntries(res.headers.entries()),
+          bodySnippet: text.slice(0, 500),
+        }),
+        { status: 200, headers: corsHeaders }
+      );
+    } catch (err: any) {
+      return new Response(JSON.stringify({ error: err.message, stack: err.stack }), {
+        status: 500,
+        headers: corsHeaders,
+      });
+    }
+  }
+
+  // 6. Debug Consumet
   if (path === '/api/debug-consumet') {
     const q = url.searchParams.get('q') || 'Frieren';
     try {
