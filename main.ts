@@ -1,6 +1,7 @@
 import { searchOtakudesu, getOtakudesuEpisodes, getOtakudesuStreams } from './src/providers/otakudesu.ts';
 import { searchKusonime, getKusonimeStreams } from './src/providers/kusonime.ts';
 import { searchWinbu, getWinbuEpisodes, getWinbuStreams } from './src/providers/winbu.ts';
+import { searchSamehadaku, getSamehadakuEpisodes, getSamehadakuStreams } from './src/providers/samehadaku.ts';
 import { searchConsumet, getConsumetEpisodes, getConsumetStreams } from './src/providers/consumet.ts';
 
 Deno.serve(async (req) => {
@@ -40,18 +41,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const [otaku, kuso, winbu, consumet] = await Promise.allSettled([
+    const [otaku, kuso, winbu, same, consumet] = await Promise.allSettled([
       searchOtakudesu(q),
       searchKusonime(q),
       searchWinbu(q),
+      searchSamehadaku(q),
       searchConsumet(q),
     ]);
 
     const results = [
-      ...(consumet.status === 'fulfilled' ? consumet.value : []),
+      ...(winbu.status === 'fulfilled' ? winbu.value : []),
+      ...(same.status === 'fulfilled' ? same.value : []),
       ...(otaku.status === 'fulfilled' ? otaku.value : []),
       ...(kuso.status === 'fulfilled' ? kuso.value : []),
-      ...(winbu.status === 'fulfilled' ? winbu.value : []),
+      ...(consumet.status === 'fulfilled' ? consumet.value : []),
     ];
 
     return new Response(JSON.stringify({ query: q, count: results.length, results }), {
@@ -73,8 +76,9 @@ Deno.serve(async (req) => {
 
     let episodes: any[] = [];
     if (provider === 'consumet') episodes = await getConsumetEpisodes(slug);
-    else if (provider === 'otakudesu') episodes = await getOtakudesuEpisodes(slug);
     else if (provider === 'winbu') episodes = await getWinbuEpisodes(slug);
+    else if (provider === 'samehadaku') episodes = await getSamehadakuEpisodes(slug);
+    else if (provider === 'otakudesu') episodes = await getOtakudesuEpisodes(slug);
 
     return new Response(JSON.stringify({ provider, slug, count: episodes.length, episodes }), {
       status: 200,
@@ -95,9 +99,10 @@ Deno.serve(async (req) => {
 
     let data: any = { streamSources: [], downloadSources: [] };
     if (provider === 'consumet') data = await getConsumetStreams(slug);
+    else if (provider === 'winbu') data = await getWinbuStreams(slug);
+    else if (provider === 'samehadaku') data = await getSamehadakuStreams(slug);
     else if (provider === 'otakudesu') data = await getOtakudesuStreams(slug);
     else if (provider === 'kusonime') data = await getKusonimeStreams(slug);
-    else if (provider === 'winbu') data = await getWinbuStreams(slug);
 
     return new Response(JSON.stringify({ provider, slug, data }), {
       status: 200,
