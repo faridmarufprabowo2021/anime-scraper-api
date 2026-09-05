@@ -3,6 +3,7 @@ import cors from 'cors';
 import { searchOtakudesu, getOtakudesuEpisodes, getOtakudesuStreams } from './providers/otakudesu.js';
 import { searchKusonime, getKusonimeStreams } from './providers/kusonime.js';
 import { searchWinbu, getWinbuEpisodes, getWinbuStreams } from './providers/winbu.js';
+import { searchSamehadaku, getSamehadakuEpisodes, getSamehadakuStreams } from './providers/samehadaku.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,16 +27,18 @@ app.get('/api/search', async (req, res) => {
   if (!q) return res.status(400).json({ error: 'Query parameter q is required' });
 
   try {
-    const [otaku, kuso, winbu] = await Promise.allSettled([
+    const [otaku, kuso, winbu, same] = await Promise.allSettled([
       searchOtakudesu(q),
       searchKusonime(q),
       searchWinbu(q),
+      searchSamehadaku(q),
     ]);
 
     const results = [
+      ...(winbu.status === 'fulfilled' ? winbu.value : []),
+      ...(same.status === 'fulfilled' ? same.value : []),
       ...(otaku.status === 'fulfilled' ? otaku.value : []),
       ...(kuso.status === 'fulfilled' ? kuso.value : []),
-      ...(winbu.status === 'fulfilled' ? winbu.value : []),
     ];
 
     res.json({ query: q, count: results.length, results });
@@ -56,6 +59,8 @@ app.get('/api/episodes', async (req, res) => {
       episodes = await getOtakudesuEpisodes(slug);
     } else if (provider === 'winbu') {
       episodes = await getWinbuEpisodes(slug);
+    } else if (provider === 'samehadaku') {
+      episodes = await getSamehadakuEpisodes(slug);
     }
     res.json({ provider, slug, count: episodes.length, episodes });
   } catch (err: any) {
@@ -77,6 +82,8 @@ app.get('/api/streams', async (req, res) => {
       data = await getKusonimeStreams(slug);
     } else if (provider === 'winbu') {
       data = await getWinbuStreams(slug);
+    } else if (provider === 'samehadaku') {
+      data = await getSamehadakuStreams(slug);
     }
     res.json({ provider, slug, data });
   } catch (err: any) {
